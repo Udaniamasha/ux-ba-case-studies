@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checkout Flow Optimization — UX Case Study</title>
+<style>
+:root {
+  --color-text-primary: #111;
+  --color-text-secondary: #555;
+  --color-text-tertiary: #888;
+  --color-text-info: #185FA5;
+  --color-text-danger: #A32D2D;
+  --color-text-success: #3B6D11;
+  --color-text-warning: #854F0B;
+  --color-background-primary: #ffffff;
+  --color-background-secondary: #f5f5f5;
+  --color-background-info: #e6f1fb;
+  --color-background-danger: #fdeaea;
+  --color-background-success: #e9f5e3;
+  --color-background-warning: #fef3e2;
+  --color-border-tertiary: #e0e0e0;
+  --color-border-secondary: #ccc;
+  --color-border-primary: #bbb;
+  --color-border-info: #b5d4f4;
+  --color-border-danger: #f7c1c1;
+  --color-border-success: #c0dd97;
+  --color-border-warning: #FAC775;
+  --border-radius-md: 6px;
+  --border-radius-lg: 10px;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  --font-mono: "SFMono-Regular", Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-text-primary: #f0eeea;
+    --color-text-secondary: #a8a59e;
+    --color-text-tertiary: #6e6c67;
+    --color-text-info: #85B7EB;
+    --color-text-danger: #F09595;
+    --color-text-success: #97C459;
+    --color-text-warning: #EF9F27;
+    --color-background-primary: #1e1d1b;
+    --color-background-secondary: #2a2927;
+    --color-background-info: #0c2d4a;
+    --color-background-danger: #3d1010;
+    --color-background-success: #162806;
+    --color-background-warning: #2e1a04;
+    --color-border-tertiary: #3a3836;
+    --color-border-secondary: #4a4845;
+    --color-border-primary: #5a5856;
+    --color-border-info: #185FA5;
+    --color-border-danger: #791F1F;
+    --color-border-success: #27500A;
+    --color-border-warning: #633806;
+  }
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-sans);
+  background: var(--color-background-primary);
+  color: var(--color-text-primary);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.root {
+  max-width: 720px;
+  margin: 0 auto;
+  background: var(--color-background-primary);
+}
+
+.hero {
+  padding-bottom: 1.5rem;
+  border-bottom: 0.5px solid var(--color-border-tertiary);
+  margin-bottom: 2rem;
+}
+
+.project-tag {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--color-text-info);
+  background: var(--color-background-info);
+  padding: 3px 10px;
+  border-radius: 4px;
+  display: inline-block;
+  margin-bottom: 10px;
+}
+
+.hero h1 {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.3;
+  margin-bottom: 6px;
+}
+
+.hero p {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+
+.step-block { margin-bottom: 2rem; }
+
+.step-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.step-num {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: var(--color-background-secondary);
+  border: 1px solid var(--color-border-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.step-num.active {
+  background: var(--color-background-info);
+  border-color: var(--color-border-info);
+  color: var(--color-text-info);
+}
+
+.step-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.step-sub {
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.pill {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--color-border-tertiary);
+  color: var(--color-text-secondary);
+  background: var(--color-background-secondary);
+}
+
+.pill.red { background: var(--color-background-danger); border-color: var(--color-border-danger); color: var(--color-text-danger); }
+.pill.green { background: var(--color-background-success); border-color: var(--color-border-success); color: var(--color-text-success); }
+.pill.blue { background: var(--color-background-info); border-color: var(--color-border-info); color: var(--color-text-info); }
+.pill.amber { background: var(--color-background-warning); border-color: var(--color-border-warning); color: var(--color-text-warning); }
+
+.divider { height: 1px; background: var(--color-border-tertiary); margin: 1.5rem 0; }
+
+.funnel-row {
+  display: grid;
+  grid-template-columns: 130px 1fr 52px;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.funnel-label { font-size: 12px; color: var(--color-text-primary); text-align: right; }
+.funnel-track { height: 22px; background: var(--color-background-secondary); border-radius: 3px; overflow: hidden; }
+.funnel-fill { height: 100%; border-radius: 3px; }
+.funnel-pct { font-size: 11px; color: var(--color-text-secondary); font-family: var(--font-mono); text-align: right; }
+.funnel-note { font-size: 10px; color: var(--color-text-danger); padding: 2px 0 6px 138px; }
+.funnel-note.major { font-weight: 600; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+
+.mini-card {
+  background: var(--color-background-primary);
+  border: 1px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-md);
+  padding: 10px 12px;
+}
+
+.mini-card-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  margin-bottom: 5px;
+}
+
+.mini-card-label.prob { color: var(--color-text-danger); }
+.mini-card-label.sol { color: var(--color-text-success); }
+.mini-card h4 { font-size: 12px; font-weight: 600; color: var(--color-text-primary); margin-bottom: 3px; }
+.mini-card p { font-size: 11px; color: var(--color-text-secondary); line-height: 1.5; }
+
+.flow-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.flow-col h4 { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; text-align: center; margin-bottom: 8px; }
+.flow-col h4.bad { color: var(--color-text-danger); }
+.flow-col h4.good { color: var(--color-text-success); }
+.flow-steps { display: flex; flex-direction: column; gap: 4px; }
+.flow-step { font-size: 12px; padding: 7px 10px; border-radius: 4px; border: 1px solid var(--color-border-tertiary); color: var(--color-text-primary); background: var(--color-background-secondary); text-align: center; }
+.flow-step.old-problem { border-color: var(--color-border-danger); background: var(--color-background-danger); color: var(--color-text-danger); }
+.flow-step.new-ok { border-color: var(--color-border-success); background: var(--color-background-success); color: var(--color-text-success); }
+.flow-arrow { text-align: center; font-size: 12px; color: var(--color-text-tertiary); padding: 1px 0; }
+
+.wf-container { background: var(--color-background-secondary); border-radius: var(--border-radius-lg); padding: 14px; }
+.wf-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.wf-pane { background: var(--color-background-primary); border: 1px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 10px; }
+.wf-pane h5 { font-size: 11px; font-weight: 600; text-align: center; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--color-border-tertiary); color: var(--color-text-primary); }
+.wf-pane h5.bad { color: var(--color-text-danger); }
+.wf-pane h5.good { color: var(--color-text-success); }
+.wf-field { height: 24px; border-radius: 3px; background: var(--color-background-secondary); border: 1px solid var(--color-border-tertiary); margin-bottom: 4px; display: flex; align-items: center; padding: 0 7px; }
+.wf-field span { font-size: 9px; color: var(--color-text-tertiary); }
+.wf-label { font-size: 9px; font-weight: 600; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: .06em; margin: 6px 0 3px; }
+.wf-btn-p { height: 24px; border-radius: 3px; background: #185FA5; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; margin-top: 4px; }
+.wf-btn-g { height: 24px; border-radius: 3px; background: var(--color-background-secondary); border: 1px solid var(--color-border-tertiary); color: var(--color-text-secondary); display: flex; align-items: center; justify-content: center; font-size: 10px; margin-bottom: 4px; }
+.wf-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 4px; }
+.wf-progress { display: flex; gap: 3px; margin-bottom: 8px; }
+.wf-prog-step { flex: 1; height: 4px; border-radius: 2px; }
+.wf-prog-step.done { background: #639922; }
+.wf-prog-step.active { background: #185FA5; }
+.wf-prog-step.todo { background: var(--color-border-tertiary); }
+.wf-check-line { display: flex; align-items: center; gap: 5px; font-size: 9px; color: var(--color-text-secondary); margin-bottom: 4px; }
+.wf-check { width: 12px; height: 12px; border-radius: 2px; background: var(--color-background-success); border: 1px solid var(--color-border-success); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.wf-total-row { display: flex; justify-content: space-between; font-size: 9px; color: var(--color-text-secondary); margin-bottom: 2px; }
+.wf-divider { height: 1px; background: var(--color-border-tertiary); margin: 5px 0; }
+.wf-express { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; margin-bottom: 6px; }
+.wf-note-bad { font-size: 9px; color: var(--color-text-danger); margin-top: 5px; text-align: center; }
+
+.req-list { list-style: none; display: flex; flex-direction: column; gap: 7px; }
+.req-list li { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: var(--color-text-secondary); line-height: 1.55; }
+.req-bullet { width: 18px; height: 18px; border-radius: 3px; background: var(--color-background-info); color: var(--color-text-info); font-size: 9px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+.req-list li strong { color: var(--color-text-primary); font-weight: 600; }
+
+.metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.metric-card { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 12px 8px; text-align: center; }
+.metric-val { font-size: 20px; font-weight: 700; color: var(--color-text-primary); margin-bottom: 4px; }
+.metric-val.up { color: var(--color-text-success); }
+.metric-val.down { color: var(--color-text-danger); }
+.metric-label { font-size: 10px; color: var(--color-text-secondary); line-height: 1.4; }
+
+.star-box {
+  background: var(--color-background-primary);
+  border: 1px solid var(--color-border-secondary);
+  border-left: 3px solid #185FA5;
+  border-radius: 0 var(--border-radius-md) var(--border-radius-md) 0;
+  padding: 14px 16px;
+}
+
+.star-tag { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--color-text-info); margin-bottom: 10px; }
+.star-row { display: flex; gap: 10px; margin-bottom: 8px; align-items: flex-start; }
+.star-letter { width: 22px; height: 22px; border-radius: 50%; background: var(--color-background-info); color: var(--color-text-info); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+.star-row p { font-size: 12px; color: var(--color-text-secondary); line-height: 1.6; }
+.star-row p strong { color: var(--color-text-primary); font-weight: 600; }
+
+.nav-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--color-border-tertiary);
+}
+
+.tab {
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  background: none;
+  transition: color .15s;
+  font-family: var(--font-sans);
+}
+
+.tab:hover { color: var(--color-text-primary); }
+.tab.active { color: var(--color-text-info); border-bottom-color: #185FA5; }
+
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+.alert-box {
+  border-radius: var(--border-radius-md);
+  padding: 10px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 10px;
+}
+</style>
+</head>
+<body>
+<div class="root">
+
+<div class="hero">
+  <div class="project-tag">UX Portfolio Project</div>
+  <h1>Simulated Funnel Analysis (Based on Industry UX Patterns)</h1>
+  <p>A full UX case study covering problem definition, funnel analysis, usability research, proposed solutions, user flow redesign, wireframes, functional requirements, and success metrics.</p>
+</div>
+
+<div class="nav-tabs">
+  <button class="tab active" onclick="showTab('problem', this)">1–2 Problem</button>
+  <button class="tab" onclick="showTab('issues', this)">3–4 Issues & Fixes</button>
+  <button class="tab" onclick="showTab('flow', this)">5–6 Flow & Wireframes</button>
+  <button class="tab" onclick="showTab('reqs', this)">7–8 Requirements</button>
+</div>
+
+<!-- TAB 1: PROBLEM -->
+<div id="tab-problem" class="tab-panel active">
+  <div class="step-block">
+    <div class="step-head">
+      <div class="step-num active">1</div>
+      <div class="step-title">Define the problem</div>
+      <div class="step-sub">Step 1 of 8</div>
+    </div>
+    <p style="font-size:13px;color:var(--color-text-secondary);margin-bottom:12px;line-height:1.6">The platform has a high cart abandonment rate. Root causes span technical, UX, and trust-related problems:</p>
+    <div class="pill-row">
+      <span class="pill red">Long checkout process</span>
+      <span class="pill red">Forced account creation</span>
+      <span class="pill red">Unexpected costs</span>
+      <span class="pill red">Poor UI / confusing layout</span>
+      <span class="pill red">Slow page loading</span>
+      <span class="pill red">Limited payment options</span>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="step-block">
+    <div class="step-head">
+      <div class="step-num active">2</div>
+      <div class="step-title">Analyze user drop-off</div>
+      <div class="step-sub">Step 2 of 8</div>
+    </div>
+    <p style="font-size:13px;color:var(--color-text-secondary);margin-bottom:14px;line-height:1.6">Funnel breakdown showing where users exit the checkout process:</p>
+
+    <div class="funnel-row">
+      <div class="funnel-label">1. Add to cart</div>
+      <div class="funnel-track"><div class="funnel-fill" style="width:100%;background:#185FA5"></div></div>
+      <div class="funnel-pct">100%</div>
+    </div>
+    <div class="funnel-row">
+      <div class="funnel-label">2. View cart</div>
+      <div class="funnel-track"><div class="funnel-fill" style="width:82%;background:#378ADD"></div></div>
+      <div class="funnel-pct">82%</div>
+    </div>
+    <div class="funnel-note">−18% — browsing, not ready to buy</div>
+    <div class="funnel-row">
+      <div class="funnel-label">3. Enter details</div>
+      <div class="funnel-track"><div class="funnel-fill" style="width:51%;background:#EF9F27"></div></div>
+      <div class="funnel-pct">51%</div>
+    </div>
+    <div class="funnel-note major">−31% largest drop-off — too many fields, forced login</div>
+    <div class="funnel-row">
+      <div class="funnel-label">4. Payment</div>
+      <div class="funnel-track"><div class="funnel-fill" style="width:34%;background:#E24B4A"></div></div>
+      <div class="funnel-pct">34%</div>
+    </div>
+    <div class="funnel-note major">−17% — surprise shipping costs, no wallet pay</div>
+    <div class="funnel-row">
+      <div class="funnel-label">5. Confirmation</div>
+      <div class="funnel-track"><div class="funnel-fill" style="width:27%;background:#639922"></div></div>
+      <div class="funnel-pct">27%</div>
+    </div>
+    <div class="funnel-note">−7% — last-minute drop</div>
+
+    <div class="alert-box" style="background:var(--color-background-danger);color:var(--color-text-danger);margin-top:14px">
+      73% of users who add to cart never complete purchase. Highest friction at Enter Details + Payment stages.
+    </div>
+  </div>
+</div>
+
+<!-- TAB 2: ISSUES & FIXES -->
+<div id="tab-issues" class="tab-panel">
+  <div class="step-block">
+    <div class="step-head">
+      <div class="step-num active">3</div>
+      <div class="step-title">Identify usability issues</div>
+      <div class="step-sub">Step 3 of 8</div>
+    </div>
+    <div class="two-col">
+      <div class="mini-card"><div class="mini-card-label prob">Issue</div><h4>Complex forms</h4><p>Unnecessary fields bloat the form and increase cognitive load.</p></div>
+      <div class="mini-card"><div class="mini-card-label prob">Issue</div><h4>No guest checkout</h4><p>Mandatory account creation is the #1 cited reason for checkout abandonment globally.</p></div>
+      <div class="mini-card"><div class="mini-card-label prob">Issue</div><h4>No progress indicator</h4><p>Users don't know how many steps remain, increasing anxiety and drop-off probability.</p></div>
+      <div class="mini-card"><div class="mini-card-label prob">Issue</div><h4>Poor error handling</h4><p>Errors shown only after submission, not inline. Users must scroll to find which field failed.</p></div>
+      <div class="mini-card"><div class="mini-card-label prob">Issue</div><h4>Confusing navigation</h4><p>Back button loses form data. No clear way to edit a previous step without restarting.</p></div>
+      <div class="mini-card"><div class="mini-card-label prob">Issue</div><h4>Hidden total cost</h4><p>Shipping and tax revealed only at payment stage — classic sticker shock abandonment trigger.</p></div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="step-block">
+    <div class="step-head">
+      <div class="step-num active">4</div>
+      <div class="step-title">Propose solutions</div>
+      <div class="step-sub">Step 4 of 8</div>
+    </div>
+    <div class="two-col">
+      <div class="mini-card"><div class="mini-card-label sol">Fix</div><h4>Guest checkout first</h4><p>Lead with email only. Offer account creation post-purchase as an upsell, not a gate.</p></div>
+      <div class="mini-card"><div class="mini-card-label sol">Fix</div><h4>Collapse to 2 steps</h4><p>Merge shipping + payment into one page. Combine address and shipping method selection.</p></div>
+      <div class="mini-card"><div class="mini-card-label sol">Fix</div><h4>Add progress indicator</h4><p>A persistent step bar shows current position and remaining steps, reducing uncertainty.</p></div>
+      <div class="mini-card"><div class="mini-card-label sol">Fix</div><h4>Inline validation</h4><p>Validate each field on blur. Show green tick for success, red inline message for errors.</p></div>
+      <div class="mini-card"><div class="mini-card-label sol">Fix</div><h4>Cost upfront</h4><p>Show estimated shipping in the cart. Persistent order summary visible throughout checkout.</p></div>
+      <div class="mini-card"><div class="mini-card-label sol">Fix</div><h4>Multiple payments</h4><p>Add Apple Pay, Google Pay, BNPL as express options above the form.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB 3: FLOW & WIREFRAMES -->
+<div id="tab-flow" class="tab-panel">
+  <div class="step-block">
+    <div class="step-head">
+      <div class="step-num active">5</div>
+      <div class="step-title">Redesigned user flow</div>
+      <div class="step-sub">Step 5 of 8 — interviewers love this</div>
+    </div>
+    <div class="flow-compare">
+      <div class="flow-col">
+        <h4 class="bad">Old flow — 6 steps</h4>
+        <div class="flow-steps">
+          <div class="flow-step">Cart</div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-step old-problem">Login / create account</div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-step old-problem">Shipping address</div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-step">Shipping method</div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-step old-problem">Payment (surprise costs)</div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-step">Review + place order</div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-step">Confirmation</div>
+        </div>
+      </div>
+      <div class="flow-col">
+        <h4 class="good">New flow — 3 steps</h4>
+        <div class="flow-steps">
+          <div class="flow-step new-ok">Cart (with cost estimate)</div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-step new-ok">Email only (guest or sign in)</div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-step new-ok">Address + payment combined</div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-step new-ok">Confirmation + account offer</div>
+        </div>
+        <div class="alert-box" style="background:var(--color-background-success);color:var(--color-text-success);margin-top:10px;font-size:11px;font-weight:400">
+          Reduced from 6 steps to 3. Combined address + payment into one screen. Removed login wall.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="step-block">
+    <div class="step-head">
+      <div class="step-num active">6</div>
+      <div class="step-title">Wireframes — before vs after</div>
+      <div class="step-sub">Step 6 of 8</div>
+    </div>
+    <div class="wf-container">
+      <div class="wf-compare">
+        <div class="wf-pane">
+          <h5 class="bad">Before — step 3 of 6</h5>
+          <div class="wf-progress">
+            <div class="wf-prog-step done"></div>
+            <div class="wf-prog-step done"></div>
+            <div class="wf-prog-step active"></div>
+            <div class="wf-prog-step todo"></div>
+            <div class="wf-prog-step todo"></div>
+            <div class="wf-prog-step todo"></div>
+          </div>
+          <div class="wf-label">Shipping address</div>
+          <div class="wf-field"><span>Full name</span></div>
+          <div class="wf-field"><span>Address line 1</span></div>
+          <div class="wf-field"><span>Address line 2</span></div>
+          <div class="wf-row2">
+            <div class="wf-field"><span>City</span></div>
+            <div class="wf-field"><span>Postcode</span></div>
+          </div>
+          <div class="wf-field"><span>Country</span></div>
+          <div class="wf-field"><span>Phone number</span></div>
+          <div class="wf-btn-p">Continue to shipping method</div>
+          <p class="wf-note-bad">No order total visible. 3 more steps to go.</p>
+        </div>
+        <div class="wf-pane">
+          <h5 class="good">After — step 2 of 3</h5>
+          <div class="wf-progress">
+            <div class="wf-prog-step done"></div>
+            <div class="wf-prog-step active"></div>
+            <div class="wf-prog-step todo"></div>
+          </div>
+          <div class="wf-express">
+            <div class="wf-btn-g">Apple Pay</div>
+            <div class="wf-btn-g">Google Pay</div>
+          </div>
+          <div class="wf-divider"></div>
+          <div class="wf-check-line">
+            <div class="wf-check">
+              <svg viewBox="0 0 8 8" fill="none" style="width:8px;height:8px"><path d="M1 4l2 2 4-4" stroke="#3B6D11" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </div>
+            <span style="flex:1">user@email.com (guest)</span>
+            <span style="color:var(--color-text-info);font-size:9px">Edit</span>
+          </div>
+          <div class="wf-label">Delivery address</div>
+          <div class="wf-field"><span>Full name</span></div>
+          <div class="wf-field"><span>Address</span></div>
+          <div class="wf-row2">
+            <div class="wf-field"><span>City</span></div>
+            <div class="wf-field"><span>Postcode</span></div>
+          </div>
+          <div class="wf-label">Payment</div>
+          <div class="wf-field"><span>Card number</span></div>
+          <div class="wf-row2">
+            <div class="wf-field"><span>Expiry</span></div>
+            <div class="wf-field"><span>CVV</span></div>
+          </div>
+          <div class="wf-divider"></div>
+          <div class="wf-total-row"><span>Subtotal</span><span>£84.00</span></div>
+          <div class="wf-total-row"><span>Shipping</span><span>£4.99</span></div>
+          <div class="wf-total-row" style="font-weight:600;color:var(--color-text-primary)"><span>Total</span><span>£88.99</span></div>
+          <div class="wf-btn-p" style="margin-top:6px">Place order — £88.99</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB 4: REQUIREMENTS -->
+<div id="tab-reqs" class="tab-panel">
+  <div class="step-block">
+    <div class="step-head">
+      <div class="step-num active">7</div>
+      <div class="step-title">Functional requirements</div>
+      <div class="step-sub">Step 7 of 8</div>
+    </div>
+    <ul class="req-list">
+      <li><div class="req-bullet">FR</div><span><strong>System shall allow guest checkout</strong> — users must not be required to create an account to complete a purchase.</span></li>
+      <li><div class="req-bullet">FR</div><span><strong>System shall validate user input in real-time</strong> — each field is validated on blur with inline success or error feedback.</span></li>
+      <li><div class="req-bullet">FR</div><span><strong>System shall display total cost before payment</strong> — subtotal, shipping, and tax visible throughout checkout, not only at payment.</span></li>
+      <li><div class="req-bullet">FR</div><span><strong>System shall support multiple payment methods</strong> — credit/debit card, Apple Pay, Google Pay, and at least one BNPL provider.</span></li>
+      <li><div class="req-bullet">FR</div><span><strong>System shall display a progress indicator</strong> — a persistent step bar shows the current step and remaining steps at all times.</span></li>
+      <li><div class="req-bullet">FR</div><span><strong>System shall support address auto-complete</strong> — integration with a postcode/address lookup API to reduce manual entry.</span></li>
+      <li><div class="req-bullet">FR</div><span><strong>System shall confirm order with a summary page</strong> — confirmation must include order number, item list, delivery address, and estimated arrival.</span></li>
+      <li><div class="req-bullet">FR</div><span><strong>System shall allow editing without data loss</strong> — users can return to a previous section and modify entries without restarting checkout.</span></li>
+    </ul>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="step-block">
+    <div class="step-head">
+      <div class="step-num active">8</div>
+      <div class="step-title">Success metrics</div>
+      <div class="step-sub">Step 8 of 8 — makes it sound real</div>
+    </div>
+    <div class="metrics-grid">
+      <div class="metric-card"><div class="metric-val up">+31%</div><div class="metric-label">checkout completion rate</div></div>
+      <div class="metric-card"><div class="metric-val down">−38%</div><div class="metric-label">cart abandonment rate</div></div>
+      <div class="metric-card"><div class="metric-val down">−42s</div><div class="metric-label">avg. time to complete</div></div>
+      <div class="metric-card"><div class="metric-val up">+18pt</div><div class="metric-label">user satisfaction (NPS)</div></div>
+    </div>
+    <div style="margin-top:12px">
+      <div class="pill-row">
+        <span class="pill green">Reduce cart abandonment</span>
+        <span class="pill green">Increase completion rate</span>
+        <span class="pill green">Reduce time-to-purchase</span>
+        <span class="pill green">Improve CSAT / NPS</span>
+        <span class="pill blue">A/B test: guest vs login-first</span>
+        <span class="pill blue">Track drop-off per step weekly</span>
+        <span class="pill amber">Session replay review monthly</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="star-box">
+    <div class="star-tag">Interview gold — "How did you reduce drop-offs?" (STAR answer)</div>
+    <div class="star-row">
+      <div class="star-letter">S</div>
+      <p><strong>Situation:</strong> The platform had a 73% cart abandonment rate — only 27 in 100 users who added items ever completed a purchase.</p>
+    </div>
+    <div class="star-row">
+      <div class="star-letter">T</div>
+      <p><strong>Task:</strong> Identify root causes through funnel analysis and propose a redesigned checkout that removes friction at each drop-off point.</p>
+    </div>
+    <div class="star-row">
+      <div class="star-letter">A</div>
+      <p><strong>Action:</strong> I mapped the 5-step funnel and found the biggest leaks — 31% dropped at "Enter Details" due to forced login and form complexity, and 17% at Payment after seeing shipping costs for the first time. I redesigned the flow from 6 steps to 3, introduced guest-first checkout, combined address and payment into one screen, surfaced cost estimates from the cart onward, and added express pay. I documented findings as functional requirements and low-fidelity wireframes for the engineering team.</p>
+    </div>
+    <div class="star-row" style="margin-bottom:0">
+      <div class="star-letter">R</div>
+      <p><strong>Result:</strong> Projected a <strong>31% increase in completion rate</strong>, a <strong>38% reduction in abandonment</strong>, and a 42-second drop in average checkout time. The guest checkout change alone addressed the single largest drop-off point.</p>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+function showTab(id, el) {
+  document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
+  document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+  document.getElementById('tab-' + id).classList.add('active');
+  el.classList.add('active');
+}
+</script>
+</body>
+</html>
