@@ -13,4 +13,4 @@ This repository contains interactive UX/UI case studies focusing on:
 Quantitative data within these case studies is simulated based on industry UX benchmarks (e.g., Baymard Institute) to demonstrate analytical thinking and problem-solving approach.
 
 ## Live Demo
-(Links will be added after GitHub Pages is enabled)
+https://udaniamasha.github.io/ux-ba-case-studies/
